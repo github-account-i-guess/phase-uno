@@ -10,13 +10,19 @@
 <body>
     <div class="container-fluid">
         <div class="row">
-            <div class="col-6">
-                <div class="row">
+            <div class="col-6"> 
+                <div class="row p-3 border-bottom border-5">
+                    <h3>Discard</h3>
                     <ul class="list-group" id="discard-container">
                     </ul>
                 </div>
-                <div class="row">
+                <div class="row p-3 border-bottom border-5">
+                    <h3>Deck</h3>
                     <ul class="list-group" id="deck-container"></ul>
+                </div>
+                <div class="row p-3">
+                    <h3>Hands</h3>
+                    <ul class="list-group" id="hand-container"></ul>
                 </div>
             </div>
             <div class="col-6">
@@ -40,10 +46,45 @@
                         <button type="submit" class="btn btn-primary">Submit!</button>
                     </div>
                 </form>
+                <div class="row mb-3">
+                    <button class="btn btn-danger" id="clear">Clear</button>
+                </div>
+                <div class="row mb-3">
+                    <button class="btn btn-warning" id="flip">Flip</button>
+                </div>
+                <div class="row mb-3">
+                    <button class="btn btn-warning" id="draw">Draw</button>
+                </div>
             </div>
         </div>
     </div>
     <script>
+        class CardContainer {
+            constructor(id, name) {
+                this.el = document.getElementById(id);
+                this.name = name;
+
+                const existingCards = localStorage.getItem(name);
+                this.cards = existingCards ? JSON.parse(existingCards)
+                    .map(c => new Card(c.number, c.color))
+                    : [];
+
+            }
+
+            update() {
+                this.el.innerHTML = "";
+                this.el.append(this.cards.map(c => c.el));
+            }
+
+            store() {
+                localStorage.setItem(this.name, JSON.stringify(this.cards)); 
+            }
+
+            clear() {
+                this.cards = [];
+            }
+        }
+
         class Main {
             static cardNumber = document.querySelector("#cardNumber")
             static numberDatalist = document.querySelector("#number-datalist");
@@ -56,11 +97,19 @@
 
             static cardForm = document.querySelector("#card-form");
 
-            static discardContainer = document.querySelector("#discard-container");
-            static deckContainer = document.querySelector("#deck-container");
+            static clearButton = document.querySelector("#clear");
+            static flipButton = document.querySelector("#flip");
+            static drawButton = document.querySelector("#draw");
 
             static main() {
-                const { numberDatalist, createOption, discardContainer, deckContainer, cardForm } = Main;
+                const { 
+                    numberDatalist, 
+                    createOption, 
+                    cardForm,
+                    clearButton,
+                    flipButton,
+                    drawButton
+                 } = Main;
                 numberDatalist.append(
                     createOption("Wild"),
                     createOption("Skip"),
@@ -69,17 +118,49 @@
                     })
                 );
                 
-                const cards = [];
+                const [discard, deck, hand] = ["discard", "deck", "hand"].map(name => {
+                    return new CardContainer(name + "-container", name);
+                });
+
+                const cardContainers = [discard, deck, hand];
                     
+                updateCards();
+
+                function updateCards() {
+                    cardContainers.forEach(c => c.update());
+                    storeCards();
+                }
+
+                function storeCards() {
+                    cardContainers.forEach(c => c.store());
+                }
+
                 cardForm.addEventListener("submit", e => {
                     const { cardForm, deckContainer } = Main;
                     const { cardNumber, cardColor } = cardForm;
                     const card = new Card(cardNumber.value, cardColor.value);
-                    cards.push(card);
+                    discard.push(card);
 
-                    deckContainer.appendChild(card.el);
+                    updateCards();
 
                     e.preventDefault();
+                });
+
+                clearButton.addEventListener("click", e => {
+                    cardContainers.forEach(c => {
+                        c.clear();
+                    });
+                    updateCards();
+                });
+
+                flipButton.addEventListener("click", e => {
+                    deck.cards = discard.cards.slice();
+                    discard.card = [];
+                    updateCards();
+                });
+
+                drawButton.addEventListener("click", e => {
+
                 });
             }
         }
