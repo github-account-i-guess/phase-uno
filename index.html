@@ -73,7 +73,7 @@
 
             update() {
                 this.el.innerHTML = "";
-                this.el.append(this.cards.map(c => c.el));
+                this.el.append(...this.cards.map(c => c.el));
             }
 
             store() {
@@ -136,14 +136,14 @@
                 }
 
                 cardForm.addEventListener("submit", e => {
+                    e.preventDefault();
+
                     const { cardForm, deckContainer } = Main;
                     const { cardNumber, cardColor } = cardForm;
                     const card = new Card(cardNumber.value, cardColor.value);
                     discard.push(card);
 
                     updateCards();
-
-                    e.preventDefault();
                 });
 
                 clearButton.addEventListener("click", e => {
